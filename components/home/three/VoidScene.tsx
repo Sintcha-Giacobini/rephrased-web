@@ -48,16 +48,36 @@ const STARS: Star[] = (() => {
   });
 })();
 
-// Just three runes, all correct. Click them in any order to restart.
-const RESET_RUNE_IDS: RuneId[] = ['eye', 'tree', 'gate'];
+// Constellation of runes scattered across two rings + small y bumps.
+// Click any THREE to trigger the restart vortex.
+const RESET_RUNE_IDS: RuneId[] = [
+  'eye', 'tree', 'gate', 'star', 'fire',
+  'wave', 'eye', 'tree', 'gate',
+];
+
+const REQUIRED_CLICKS = 3;
 
 const RESET_POSITIONS: [number, number, number][] = (() => {
-  const positions: [number, number, number][] = [];
-  for (let i = 0; i < RESET_RUNE_IDS.length; i++) {
-    const angle = (i / RESET_RUNE_IDS.length) * Math.PI * 2 + Math.PI / 6;
-    positions.push([Math.cos(angle) * 5, VOID_CENTER_Y, Math.sin(angle) * 5]);
+  const items: [number, number, number][] = [];
+  // Inner ring — 4 runes at radius 4, slightly below void plane
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2 + Math.PI / 8;
+    items.push([
+      Math.cos(angle) * 4.0,
+      VOID_CENTER_Y - 0.5,
+      Math.sin(angle) * 4.0,
+    ]);
   }
-  return positions;
+  // Outer ring — 5 runes at radius 6.5, slightly above
+  for (let i = 0; i < 5; i++) {
+    const angle = (i / 5) * Math.PI * 2;
+    items.push([
+      Math.cos(angle) * 6.5,
+      VOID_CENTER_Y + 0.6,
+      Math.sin(angle) * 6.5,
+    ]);
+  }
+  return items;
 })();
 
 export function VoidScene({ onFlash }: Props) {
@@ -109,7 +129,8 @@ function TwinkleStar({ x, y, z, size, twinkle }: Star) {
 
 function ResetRunes({ onFlash }: Props) {
   const scroll = useScroll();
-  const [clicked, setClicked] = useState<RuneId[]>([]);
+  /** Tracks clicked POSITIONS (by index, since rune ids may repeat) */
+  const [clickedIdx, setClickedIdx] = useState<number[]>([]);
   const successRef = useRef(false);
 
   const meshRefs = useRef<(Mesh | null)[]>(Array(RESET_RUNE_IDS.length).fill(null));
@@ -239,7 +260,7 @@ function ResetRunes({ onFlash }: Props) {
             mat.opacity = 0.55;
           }
         });
-        setClicked([]);
+        setClickedIdx([]);
         successRef.current = false;
       },
       undefined,
@@ -249,14 +270,16 @@ function ResetRunes({ onFlash }: Props) {
 
   const handleClick = (e: ThreeEvent<MouseEvent>, idx: number) => {
     e.stopPropagation();
+    if (clickedIdx.includes(idx) || successRef.current) return;
+
+    const next = [...clickedIdx, idx];
+    setClickedIdx(next);
     const id = RESET_RUNE_IDS[idx];
-    if (clicked.includes(id) || successRef.current) return;
+    console.log(
+      `[void] clicked ${id} (pos ${idx}) — ${next.length}/${REQUIRED_CLICKS}`,
+    );
 
-    const next = [...clicked, id];
-    setClicked(next);
-    console.log(`[void] clicked ${id} — ${next.length}/${RESET_RUNE_IDS.length}`);
-
-    if (next.length >= RESET_RUNE_IDS.length) {
+    if (next.length >= REQUIRED_CLICKS) {
       triggerRestart();
     }
   };
@@ -265,10 +288,10 @@ function ResetRunes({ onFlash }: Props) {
     <>
       {RESET_RUNE_IDS.map((id, i) => (
         <ResetRune
-          key={id}
+          key={i}
           texture={textures[i]}
           position={RESET_POSITIONS[i]}
-          isClicked={clicked.includes(id)}
+          isClicked={clickedIdx.includes(i)}
           onClick={(e) => handleClick(e, i)}
           meshRef={(m) => (meshRefs.current[i] = m)}
           matRef={(m) => (matRefs.current[i] = m)}
