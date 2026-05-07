@@ -16,7 +16,7 @@ export function ScrollHtml() {
   return (
     <div className="w-screen pointer-events-none text-white">
       {/* Page 0 — Hero (wide shot) */}
-      <section className="h-screen flex items-end justify-center pb-16 md:pb-24">
+      <section className="h-screen flex items-start justify-center pt-12 md:pt-20">
         <div className="text-center max-w-4xl px-6">
           <p className="font-display italic tracking-[0.5em] text-white/85 text-[10px] md:text-xs uppercase mb-4 drop-shadow">
             A linguistic puzzle adventure

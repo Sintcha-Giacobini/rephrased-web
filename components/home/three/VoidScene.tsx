@@ -133,7 +133,12 @@ function ResetRunes({ onFlash }: Props) {
   const [clickedIdx, setClickedIdx] = useState<number[]>([]);
   const successRef = useRef(false);
 
-  const meshRefs = useRef<(Mesh | null)[]>(Array(RESET_RUNE_IDS.length).fill(null));
+  // Outer group ref per rune — drives WORLD position/scale during the
+  // convergence animation (the inner mesh ref is for material tweaks).
+  // We can't animate the inner mesh directly because Billboard uses its
+  // wrapper as the position anchor; mesh.position would then be relative
+  // and the runes would barely move.
+  const groupRefs = useRef<(Group | null)[]>(Array(RESET_RUNE_IDS.length).fill(null));
   const matRefs = useRef<(MeshBasicMaterial | null)[]>(
     Array(RESET_RUNE_IDS.length).fill(null),
   );
@@ -172,8 +177,11 @@ function ResetRunes({ onFlash }: Props) {
     console.log('[void] restart triggered — runes converging');
 
     // Kill any in-flight scale tweens from the click feedback
-    meshRefs.current.forEach((m) => {
-      if (m) gsap.killTweensOf(m.scale);
+    groupRefs.current.forEach((g) => {
+      if (g) {
+        gsap.killTweensOf(g.scale);
+        gsap.killTweensOf(g.position);
+      }
     });
 
     // Snapshot starting polar coords (in xz plane)
@@ -186,10 +194,10 @@ function ResetRunes({ onFlash }: Props) {
 
     // ── PHASE 0: brief pulse cue ──
     RESET_POSITIONS.forEach((_, i) => {
-      const mesh = meshRefs.current[i];
-      if (!mesh) return;
-      tl.to(mesh.scale, { x: 1.6, y: 1.6, z: 1.6, duration: 0.18, ease: 'power2.out' }, 0);
-      tl.to(mesh.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.18, ease: 'power2.in' }, 0.18);
+      const grp = groupRefs.current[i];
+      if (!grp) return;
+      tl.to(grp.scale, { x: 1.6, y: 1.6, z: 1.6, duration: 0.18, ease: 'power2.out' }, 0);
+      tl.to(grp.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.18, ease: 'power2.in' }, 0.18);
     });
 
     // ── PHASE 1: vortex convergence (2.0s) ──
@@ -223,20 +231,22 @@ function ResetRunes({ onFlash }: Props) {
         onUpdate: () => {
           const t = proxy.progress;
           for (let i = 0; i < RESET_POSITIONS.length; i++) {
-            const mesh = meshRefs.current[i];
+            const grp = groupRefs.current[i];
             const mat = matRefs.current[i];
-            if (!mesh) continue;
+            if (!grp) continue;
 
-            // Spiral inward — radius decays smoothly, angle keeps sweeping
+            // Spiral inward — radius decays smoothly, angle keeps sweeping.
+            // We're modifying the OUTER group's position (world coords),
+            // so the rune actually moves to the centre of the void.
             const radius = startPolar[i].radius * Math.pow(1 - t, 1.4);
             const angle = startPolar[i].angle + t * Math.PI * 2; // 1 full turn
-            mesh.position.x = Math.cos(angle) * radius;
-            mesh.position.z = Math.sin(angle) * radius;
-            mesh.position.y = VOID_CENTER_Y;
+            grp.position.x = Math.cos(angle) * radius;
+            grp.position.z = Math.sin(angle) * radius;
+            grp.position.y = VOID_CENTER_Y;
 
             // Scale ramp 1 → 4 (dramatic finish)
             const scale = 1 + t * 3.0;
-            mesh.scale.set(scale, scale, scale);
+            grp.scale.set(scale, scale, scale);
 
             if (mat) {
               // Colour lerps to pure white in second half
@@ -272,12 +282,11 @@ function ResetRunes({ onFlash }: Props) {
     tl.call(
       () => {
         RESET_POSITIONS.forEach((pos, i) => {
-          const mesh = meshRefs.current[i];
+          const grp = groupRefs.current[i];
           const mat = matRefs.current[i];
-          if (mesh) {
-            mesh.position.set(pos[0], pos[1], pos[2]);
-            mesh.scale.set(1, 1, 1);
-            mesh.rotation.set(0, 0, 0);
+          if (grp) {
+            grp.position.set(pos[0], pos[1], pos[2]);
+            grp.scale.set(1, 1, 1);
           }
           if (mat) {
             mat.color.set(new Color('#b4d7d8'));
@@ -286,7 +295,6 @@ function ResetRunes({ onFlash }: Props) {
         });
         setClickedIdx([]);
         successRef.current = false;
-        // Reset singularity sphere
         if (singRef.current) singRef.current.scale.set(0.05, 0.05, 0.05);
         if (singMatRef.current) singMatRef.current.opacity = 0;
       },
@@ -334,7 +342,7 @@ function ResetRunes({ onFlash }: Props) {
           position={RESET_POSITIONS[i]}
           isClicked={clickedIdx.includes(i)}
           onClick={(e) => handleClick(e, i)}
-          meshRef={(m) => (meshRefs.current[i] = m)}
+          groupRef={(g) => (groupRefs.current[i] = g)}
           matRef={(m) => (matRefs.current[i] = m)}
         />
       ))}
@@ -347,7 +355,7 @@ interface ResetRuneProps {
   position: [number, number, number];
   isClicked: boolean;
   onClick: (e: ThreeEvent<MouseEvent>) => void;
-  meshRef: (m: Mesh | null) => void;
+  groupRef: (g: Group | null) => void;
   matRef: (m: MeshBasicMaterial | null) => void;
 }
 
@@ -356,28 +364,27 @@ function ResetRune({
   position,
   isClicked,
   onClick,
-  meshRef,
+  groupRef,
   matRef,
 }: ResetRuneProps) {
-  const internalMesh = useRef<Mesh>(null);
+  const internalGroup = useRef<Group>(null);
   const internalMat = useRef<MeshBasicMaterial>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Click feedback — lock in with a satisfying scale pulse
+  // Click feedback — pulse the OUTER group (so position/scale on the
+  // group stay consistent with the convergence animation later)
   useEffect(() => {
-    if (!isClicked || !internalMesh.current) return;
+    if (!isClicked || !internalGroup.current) return;
     gsap.fromTo(
-      internalMesh.current.scale,
+      internalGroup.current.scale,
       { x: 1.5, y: 1.5, z: 1.5 },
       { x: 1.25, y: 1.25, z: 1.25, duration: 0.5, ease: 'elastic.out(1, 0.5)' },
     );
   }, [isClicked]);
 
-  // Gentle breathing while idle, more emphatic on hover
   useFrame(({ clock }) => {
     if (!internalMat.current) return;
     if (isClicked) {
-      // Locked-in steady glow
       internalMat.current.opacity = 0.95;
     } else if (hovered) {
       internalMat.current.opacity = 0.95;
@@ -387,12 +394,15 @@ function ResetRune({
   });
 
   return (
-    <Billboard position={position} follow lockX={false} lockY={false} lockZ={false}>
-      <mesh
-        ref={(m) => {
-          internalMesh.current = m;
-          meshRef(m);
-        }}
+    <group
+      ref={(g) => {
+        internalGroup.current = g;
+        groupRef(g);
+      }}
+      position={position}
+    >
+      <Billboard follow lockX={false} lockY={false} lockZ={false}>
+        <mesh
         onClick={onClick}
         onPointerEnter={(e) => {
           e.stopPropagation();
@@ -404,20 +414,21 @@ function ResetRune({
           document.body.style.cursor = 'auto';
         }}
       >
-        <planeGeometry args={[1.0, 1.0]} />
-        <meshBasicMaterial
-          ref={(m) => {
-            internalMat.current = m;
-            matRef(m);
-          }}
-          map={texture}
-          color={isClicked ? '#fbe5b8' : hovered ? '#cce4e5' : '#b4d7d8'}
-          transparent
-          opacity={0.55}
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </mesh>
-    </Billboard>
+          <planeGeometry args={[1.0, 1.0]} />
+          <meshBasicMaterial
+            ref={(m) => {
+              internalMat.current = m;
+              matRef(m);
+            }}
+            map={texture}
+            color={isClicked ? '#fbe5b8' : hovered ? '#cce4e5' : '#b4d7d8'}
+            transparent
+            opacity={0.55}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      </Billboard>
+    </group>
   );
 }
