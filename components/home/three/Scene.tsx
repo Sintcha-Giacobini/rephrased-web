@@ -64,14 +64,17 @@ export function Scene({ onFlash }: SceneProps) {
     const t = scroll.offset;
     const dark = Math.max(0, Math.min(1, (t - 0.20) / 0.13));
 
+    // Only the pure-WHITE ambient ramps up in the cave — that way the
+    // column's perceived colour stays neutral instead of shifting toward
+    // the hemisphere's sky-blue.
     if (ambientRef.current) {
-      ambientRef.current.intensity = 0.6 + dark * 1.0;   // 0.6 → 1.6
+      ambientRef.current.intensity = 0.6 + dark * 1.4;   // 0.6 → 2.0
     }
-    if (hemiRef.current) {
-      hemiRef.current.intensity = 0.55 + dark * 0.45;    // 0.55 → 1.0
-    }
+    // Hemisphere stays CONSTANT so its (sky/ground) colour mix doesn't
+    // tint the column differently above ground vs. in the cave.
+    // Sun fades to a dim floor.
     if (dirLightRef.current) {
-      dirLightRef.current.intensity = 1.2 * (1 - dark) + 0.4; // 1.2 → 0.4
+      dirLightRef.current.intensity = 1.2 * (1 - dark) + 0.3;
     }
 
     if (scene.fog instanceof Fog) {

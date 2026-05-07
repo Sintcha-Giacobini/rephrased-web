@@ -59,6 +59,8 @@ export function SteleGLB() {
   const gltf = useGLTF(GLB_PATH);
 
   // Pure WHITE stone — no self-emission. Visibility comes from scene lighting.
+  // fog:false so the column reads the same color above ground and in the cave
+  // (otherwise the tightening black fog tints it dark in the descent).
   const stoneMat = useMemo(() => {
     return new MeshStandardMaterial({
       color: new Color('#fafafa'),
@@ -66,6 +68,7 @@ export function SteleGLB() {
       metalness: 0.05,
       transparent: true,
       opacity: 1,
+      fog: false,
     });
   }, []);
 
