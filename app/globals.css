@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────
+   Design Tokens · Clean Desert + Cyan Sky
+   ───────────────────────────────────────────────── */
+:root {
+  /* Palette */
+  --c-ink:    #0e1f2a;
+  --c-ocean:  #285260;
+  --c-sky:    #148ee2;
+  --c-fog:    #b4d7d8;
+  --c-bronze: #ab9072;
+  --c-sand:   #e8d6c2;
+  --c-stone:  #7d8085;
+
+  /* Semantic */
+  --bg-base:           var(--c-ink);
+  --bg-elevated:       #162939;
+  --fg-primary:        #ede4d8;
+  --fg-secondary:      var(--c-fog);
+  --fg-muted:          #6b7e89;
+  --accent-warm:       var(--c-bronze);
+  --accent-warm-bright: var(--c-sand);
+  --accent-cool:       var(--c-sky);
+  --rune-dim:          rgba(180, 215, 216, 0.18);
+  --rune-active:       var(--c-sand);
+  --rune-glow:         rgba(224, 215, 207, 0.55);
+
+  /* Type */
+  --font-display: 'Cormorant Garamond', 'Noto Serif JP', serif;
+  --font-body:    'Inter Variable', system-ui, sans-serif;
+  --font-glyph:   'Noto Serif JP', serif;
+
+  /* Motion */
+  --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ritual:    cubic-bezier(0.83, 0, 0.17, 1);
+}
+
+html, body {
+  background: var(--bg-base);
+  color: var(--fg-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* Paper grain overlay (kept subtle now) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.text-balance { text-wrap: balance; }

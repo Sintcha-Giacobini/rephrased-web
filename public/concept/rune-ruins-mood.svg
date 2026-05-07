@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Rune Ruins — mood concept (static)
+  Use this to align direction before swapping in the real R3F scene.
+  Palette: 蒼影のフィルム
+    #0f1217 ink   #27606c ocean   #7baaab fog
+    #c68d5d bronze #e6bd8b sand
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <radialGradient id="sun" cx="50%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#e6bd8b" stop-opacity="0.55"/>
+      <stop offset="40%" stop-color="#c68d5d" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0f1217" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a4750"/>
+      <stop offset="60%" stop-color="#27606c"/>
+      <stop offset="100%" stop-color="#0f1217"/>
+    </linearGradient>
+    <linearGradient id="seaFloor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1217"/>
+      <stop offset="100%" stop-color="#0a0c10"/>
+    </linearGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.07 0"/>
+    </filter>
+  </defs>
+
+  <!-- Sky / horizon -->
+  <rect width="1600" height="600" fill="url(#horizon)"/>
+
+  <!-- Buried sun -->
+  <circle cx="900" cy="540" r="380" fill="url(#sun)"/>
+
+  <!-- Distant towers (Chants of Sennaar / brutalist silhouettes) -->
+  <g fill="#0f1217" opacity="0.95">
+    <rect x="80"  y="380" width="160" height="240"/>
+    <rect x="280" y="320" width="120" height="300"/>
+    <polygon points="430,300 530,260 530,620 430,620"/>
+    <rect x="600" y="360" width="180" height="260"/>
+    <polygon points="820,400 920,340 1000,400 1000,620 820,620"/>
+    <rect x="1080" y="280" width="80"  height="340"/>
+    <rect x="1200" y="350" width="160" height="270"/>
+    <polygon points="1400,330 1500,290 1500,620 1400,620"/>
+  </g>
+
+  <!-- A single illuminated window — narrative anchor -->
+  <rect x="306" y="380" width="14" height="22" fill="#e6bd8b" opacity="0.85"/>
+
+  <!-- Sea floor / ruin ground -->
+  <rect x="0" y="600" width="1600" height="300" fill="url(#seaFloor)"/>
+  <g stroke="#1a4750" stroke-width="1" opacity="0.5">
+    <line x1="0"    y1="640" x2="1600" y2="640"/>
+    <line x1="0"    y1="700" x2="1600" y2="700"/>
+    <line x1="0"    y1="780" x2="1600" y2="780"/>
+  </g>
+
+  <!-- Foreground rocks -->
+  <g fill="#0a0c10">
+    <polygon points="0,720 220,680 320,740 280,900 0,900"/>
+    <polygon points="1320,760 1450,710 1600,740 1600,900 1320,900"/>
+    <polygon points="640,780 760,750 820,790 760,900 620,900"/>
+  </g>
+
+  <!-- Floating runes (dim) -->
+  <g fill="none" stroke="#7baaab" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.55">
+    <!-- Eye (correct) — center-left, slightly higher -->
+    <g transform="translate(330,460) scale(0.55)">
+      <path d="M64 32 C32 32 12 64 12 64 C12 64 32 96 64 96 C96 96 116 64 116 64 C116 64 96 32 64 32 Z M64 50 A14 14 0 1 0 64 78 A14 14 0 1 0 64 50 Z"/>
+    </g>
+    <!-- Tree (correct) — center, lower -->
+    <g transform="translate(770,560) scale(0.6)">
+      <path d="M64 14 L64 114 M64 40 L40 60 M64 40 L88 60 M64 70 L34 92 M64 70 L94 92"/>
+    </g>
+    <!-- Gate (correct) — right, mid -->
+    <g transform="translate(1180,440) scale(0.55)">
+      <path d="M28 110 L28 38 Q28 18 64 18 Q100 18 100 38 L100 110 M28 60 L100 60 M64 60 L64 110"/>
+    </g>
+    <!-- Fire — wrong -->
+    <g transform="translate(490,510) scale(0.45)">
+      <path d="M64 14 L114 110 L14 110 Z M64 50 L64 90 M50 70 L78 70"/>
+    </g>
+    <!-- Star — wrong -->
+    <g transform="translate(990,360) scale(0.42)">
+      <path d="M64 8 L72 56 L120 64 L72 72 L64 120 L56 72 L8 64 L56 56 Z"/>
+    </g>
+    <!-- Wave — wrong, far left low -->
+    <g transform="translate(150,620) scale(0.45)">
+      <path d="M14 50 Q34 30 54 50 T94 50 T114 50 M14 70 Q34 50 54 70 T94 70 T114 70 M14 90 Q34 70 54 90 T94 90 T114 90"/>
+    </g>
+  </g>
+
+  <!-- Title: serif + Japanese -->
+  <g font-family="'Cormorant Garamond', 'Noto Serif JP', serif" fill="#e6bd8b">
+    <text x="800" y="180" text-anchor="middle" font-size="64" letter-spacing="6">蒼影のフィルム</text>
+    <text x="800" y="218" text-anchor="middle" font-size="18" font-style="italic"
+          fill="#7baaab" letter-spacing="8">— Film of the Sea —</text>
+    <text x="800" y="250" text-anchor="middle" font-size="13" font-style="italic"
+          fill="#7baaab" opacity="0.7" letter-spacing="2">海退去之后，留下了语言。</text>
+  </g>
+
+  <!-- Status counter -->
+  <text x="800" y="850" text-anchor="middle" fill="#7baaab" opacity="0.55"
+        font-family="serif" font-style="italic" font-size="13" letter-spacing="3">
+    点亮三道字符，唤醒沉睡的故事 · 0 / 3
+  </text>
+
+  <!-- Paper grain overlay (final) -->
+  <rect width="1600" height="900" filter="url(#grain)" opacity="0.6"/>
+  <rect width="1600" height="900" fill="#0f1217" opacity="0.05"/>
+</svg>
