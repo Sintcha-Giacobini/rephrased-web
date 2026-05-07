@@ -367,8 +367,8 @@ function ResetRune({
   groupRef,
   matRef,
 }: ResetRuneProps) {
-  const internalGroup = useRef<Group>(null);
-  const internalMat = useRef<MeshBasicMaterial>(null);
+  const internalGroup = useRef<Group | null>(null);
+  const internalMat = useRef<MeshBasicMaterial | null>(null);
   const [hovered, setHovered] = useState(false);
 
   // Click feedback — pulse the OUTER group (so position/scale on the

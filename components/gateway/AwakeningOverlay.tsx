@@ -41,10 +41,11 @@ export function AwakeningOverlay() {
     // Phase 4: navigate via View Transitions
     tl.add(() => {
       const go = () => router.push('/home');
-      // @ts-expect-error -- View Transitions API isn't fully typed yet
-      if (typeof document !== 'undefined' && document.startViewTransition) {
-        // @ts-expect-error
-        document.startViewTransition(() => go());
+      const doc = document as Document & {
+        startViewTransition?: (cb: () => void) => unknown;
+      };
+      if (typeof document !== 'undefined' && doc.startViewTransition) {
+        doc.startViewTransition(() => go());
       } else {
         go();
       }

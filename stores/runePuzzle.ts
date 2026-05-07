@@ -91,6 +91,6 @@ export const useRunePuzzle = create<RunePuzzleState>((set, get) => ({
       openingPhase: 'idle',
     }),
   bumpHint: () =>
-    set((s) => ({ hintLevel: Math.min(2, (s.hintLevel + 1) as 0 | 1 | 2) })),
+    set((s) => ({ hintLevel: Math.min(2, s.hintLevel + 1) as 0 | 1 | 2 })),
   setOpeningPhase: (p) => set({ openingPhase: p }),
 }));
