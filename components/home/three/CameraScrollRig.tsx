@@ -71,7 +71,7 @@ export function CameraScrollRig() {
   const target = useRef(new Vector3());
   const lookTarget = useRef(new Vector3());
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
     const t = scroll.offset;
 
     if (t < 0.10) {
@@ -106,10 +106,14 @@ export function CameraScrollRig() {
       );
       lookTarget.current.set(0, state.y, 0);
     } else {
-      // Void — drift past the column
+      // Void — drift past the column AND keep auto-rotating with time
+      // (so even when the user is parked at scroll = 1, the camera
+      // continues to orbit slowly — endless rotation around the column.)
       const k = (t - 0.92) / 0.08;
       const lastAngle = CUM_ANGLES[CUM_ANGLES.length - 1];
-      const angle = lastAngle + k * Math.PI * 0.5;
+      const baseAngle = lastAngle + k * Math.PI * 0.5;
+      const autoRot = clock.elapsedTime * 0.18 * k; // ramps up as we land
+      const angle = baseAngle + autoRot;
       const radius = 10 + k * 4;
       const y = -14 - k * 6;
       target.current.set(Math.sin(angle) * radius, y, Math.cos(angle) * radius);

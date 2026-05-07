@@ -137,6 +137,10 @@ function ResetRunes({ onFlash }: Props) {
   const matRefs = useRef<(MeshBasicMaterial | null)[]>(
     Array(RESET_RUNE_IDS.length).fill(null),
   );
+  // Singularity sphere — grows from 0 during convergence, becomes a
+  // huge pure-white orb at the centre. Impossible-to-miss visual.
+  const singRef = useRef<Mesh>(null);
+  const singMatRef = useRef<MeshBasicMaterial>(null);
 
   const textures = useMemo(
     () =>
@@ -189,6 +193,26 @@ function ResetRunes({ onFlash }: Props) {
     });
 
     // ── PHASE 1: vortex convergence (2.0s) ──
+    // Big white singularity sphere grows from 0 → 12 in parallel with
+    // the rune vortex. This guarantees a visible "energy condensing"
+    // moment regardless of the camera position.
+    if (singRef.current) {
+      tl.fromTo(
+        singRef.current.scale,
+        { x: 0.05, y: 0.05, z: 0.05 },
+        { x: 12, y: 12, z: 12, duration: 2.0, ease: 'power2.in' },
+        0.4,
+      );
+    }
+    if (singMatRef.current) {
+      tl.fromTo(
+        singMatRef.current,
+        { opacity: 0 },
+        { opacity: 0.95, duration: 1.4, ease: 'power2.in' },
+        0.4,
+      );
+    }
+
     const proxy = { progress: 0 };
     tl.to(
       proxy,
@@ -262,6 +286,9 @@ function ResetRunes({ onFlash }: Props) {
         });
         setClickedIdx([]);
         successRef.current = false;
+        // Reset singularity sphere
+        if (singRef.current) singRef.current.scale.set(0.05, 0.05, 0.05);
+        if (singMatRef.current) singMatRef.current.opacity = 0;
       },
       undefined,
       '+=0.55',
@@ -286,6 +313,20 @@ function ResetRunes({ onFlash }: Props) {
 
   return (
     <>
+      {/* Singularity orb — invisible until vortex begins */}
+      <mesh ref={singRef} position={[0, VOID_CENTER_Y, 0]} scale={[0.05, 0.05, 0.05]}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshBasicMaterial
+          ref={singMatRef}
+          color="#ffffff"
+          transparent
+          opacity={0}
+          fog={false}
+          toneMapped={false}
+          depthWrite={false}
+        />
+      </mesh>
+
       {RESET_RUNE_IDS.map((id, i) => (
         <ResetRune
           key={i}
